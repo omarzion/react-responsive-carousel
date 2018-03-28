@@ -9,6 +9,9 @@ import Swipe from 'react-easy-swipe';
 class Thumbs extends Component {
     static displayName = 'Thumbs';
 
+    itemsWrapper;
+    thumbRefs;
+
     static propsTypes = {
         children: PropTypes.element.isRequired,
         transitionTime: PropTypes.number,
@@ -24,6 +27,8 @@ class Thumbs extends Component {
 
     constructor(props) {
         super(props);
+        this.itemsWrapper = null;
+        this.thumbRefs = [];
 
         this.state = {
             initialized: false,
@@ -97,7 +102,7 @@ class Thumbs extends Component {
 
         const total = this.props.children.length;
         this.wrapperSize = this.itemsWrapper.clientWidth;
-        this.itemSize = this.props.thumbWidth ? this.props.thumbWidth : outerWidth(this.refs.thumb0);
+        this.itemSize = this.props.thumbWidth ? this.props.thumbWidth : outerWidth(this.thumbRefs[0]);
         this.visibleItems = Math.floor(this.wrapperSize / this.itemSize);
         this.lastPosition = total - this.visibleItems;
         this.showArrows = this.visibleItems < total;
@@ -237,7 +242,7 @@ class Thumbs extends Component {
 
             const thumbProps = {
                 key: index,
-                ref: `thumb${index}`,
+                ref: ref => this.thumbRefs[index] = ref,
                 className: itemClass,
                 onClick: this.handleClickItem.bind(this, index, this.props.children[index])
             };

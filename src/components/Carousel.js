@@ -14,6 +14,10 @@ const defaultStatusFormatter = (current, total) => `${current} of ${total}`;
 class Carousel extends Component {
     static displayName = 'Carousel';
 
+    // refs
+    carouselWrapper;
+    items;
+
     static propTypes = {
         className: PropTypes.string,
         children: PropTypes.node,
@@ -73,7 +77,8 @@ class Carousel extends Component {
 
     constructor(props) {
         super(props);
-
+        this.carouselWrapper = null;
+        this.items = [];
         this.state = {
             initialized: false,
             selectedItem: props.selectedItem,
@@ -144,21 +149,19 @@ class Carousel extends Component {
 
     setupAutoPlay () {
         this.autoPlay();
-        const carouselWrapper = this.refs['carouselWrapper'];
 
-        if (this.props.stopOnHover && carouselWrapper) {
-            carouselWrapper.addEventListener('mouseenter', this.stopOnHover);
-            carouselWrapper.addEventListener('mouseleave', this.startOnLeave);
+        if (this.props.stopOnHover && this.carouselWrapper) {
+            this.carouselWrapper.addEventListener('mouseenter', this.stopOnHover);
+            this.carouselWrapper.addEventListener('mouseleave', this.startOnLeave);
         }
     }
 
     destroyAutoPlay () {
         this.clearAutoPlay();
-        const carouselWrapper = this.refs['carouselWrapper'];
 
-        if (this.props.stopOnHover && carouselWrapper) {
-            carouselWrapper.removeEventListener('mouseenter', this.stopOnHover);
-            carouselWrapper.removeEventListener('mouseleave', this.startOnLeave);
+        if (this.props.stopOnHover && this.carouselWrapper) {
+            this.carouselWrapper.removeEventListener('mouseenter', this.stopOnHover);
+            this.carouselWrapper.removeEventListener('mouseleave', this.startOnLeave);
         }
     }
 
@@ -249,7 +252,7 @@ class Carousel extends Component {
         }
 
         const isHorizontal = this.props.axis === 'horizontal';
-        const firstItem = this.refs.item0;
+        const firstItem = this.items[0];
         const itemSize = isHorizontal ? firstItem.clientWidth : firstItem.clientHeight;
 
         this.setState({
@@ -427,13 +430,13 @@ class Carousel extends Component {
 
     getInitialImage = () => {
         const selectedItem = this.props.selectedItem;
-        const item = this.refs[`item${selectedItem}`];
+        const item = this.items && this.items[selectedItem];
         const images = item && item.getElementsByTagName('img');
         return images && images[selectedItem];
     }
 
     getVariableImageHeight = (position) => {
-        const item = this.refs[`item${position}`];
+        const item = this.items && this.items[position];
         const images = item && item.getElementsByTagName('img');
         if (this.state.hasMount && images.length > 0) {
             const image = images[0];
@@ -459,7 +462,7 @@ class Carousel extends Component {
         return React.Children.map(this.props.children, (item, index) => {
             const itemClass = klass.ITEM(true, index === this.state.selectedItem);
             const slideProps = {
-                ref: 'item' + index,
+                ref: ref => this.items[index] = ref,
                 key: 'itemKey' + index,
                 className: klass.ITEM(true, index === this.state.selectedItem),
                 onClick: this.handleClickItem.bind(this, index, item)
@@ -588,14 +591,14 @@ class Carousel extends Component {
             containerStyles.height = this.state.itemSize;
         }
         return (
-            <div className={this.props.className} ref="carouselWrapper">
+            <div className={this.props.className} ref={ref => this.carouselWrapper = ref}>
                 <div className={klass.CAROUSEL(true)} style={{width: this.props.width}}>
                     <button type="button" className={klass.ARROW_PREV(!hasPrev)} onClick={this.decrement} />
                     <div className={klass.WRAPPER(true, this.props.axis)} style={containerStyles} ref="itemsWrapper">
                         { this.props.swipeable ?
                             <Swipe
                                 tagName="ul"
-                                ref={c => this.list = c}
+                                // ref={c => this.list = c}
                                 {...swiperProps}
                                 allowMouseEvents={this.props.emulateTouch}>
                               { this.renderItems() }
